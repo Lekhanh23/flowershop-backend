@@ -6,6 +6,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Đảm bảo bạn có 2 dòng này:
+  app.enableCors({
+    origin: 'http://localhost:3001', // Cho phép frontend của bạn
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
   app.useGlobalPipes(new ValidationPipe());
   app.setGlobalPrefix('api');
   

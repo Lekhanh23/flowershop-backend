@@ -12,12 +12,35 @@ export class AuthService {
   ) {}
 
   // Dùng cho LocalStrategy
+  // src/auth/auth.service.ts
+
   async validateUser(email: string, pass: string): Promise<any> {
+    
+    // --- BẮT ĐẦU DEBUG ---
+    console.log("=================================");
+    console.log("BẮT ĐẦU KIỂM TRA ĐĂNG NHẬP");
+    console.log("Email nhận được:", email);
+    console.log("Password nhận được (từ frontend):", pass); // <-- Dòng này quan trọng nhất
+    // --- KẾT THÚC DEBUG ---
+
     const user = await this.usersService.findOneByEmail(email);
-    if (user && (await bcrypt.compare(pass, user.password))) {
-      const { password, ...result } = user;
-      return result;
+
+    if (user) {
+      console.log("Hash trong CSDL:", user.password); // <-- Xem hash
+      const isMatch = await bcrypt.compare(pass, user.password);
+      console.log("Kết quả so sánh (isMatch):", isMatch); // <-- Xem kết quả
+      
+      if (isMatch) {
+        console.log(">>> ĐĂNG NHẬP THÀNH CÔNG");
+        const { password, ...result } = user;
+        return result;
+      }
+    } else {
+      console.log("--- LỖI: Không tìm thấy user này.");
     }
+
+    console.log(">>> ĐĂNG NHẬP THẤT BẠI");
+    console.log("=================================");
     return null;
   }
 
