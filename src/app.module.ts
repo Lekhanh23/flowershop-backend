@@ -9,7 +9,8 @@ import { OrdersModule } from './orders/orders.module';
 import { ProductsModule } from './products/products.module';
 import { CollectionsModule } from './collections/collections.module';
 import { ServicesModule } from './services/services.module';
-import { CartItemsModule } from './cart-items/cart-items.module';
+import { ShipperModule } from './shipper/shipper.module';
+import { CartModule } from './cart/cart.module';
 // Import tất cả các Entities của bạn
 import { User } from './users/entities/user.entity';
 import { Product } from './products/entities/product.entity';
@@ -19,7 +20,12 @@ import { OrderItem } from './orders/entities/order-item.entity';
 import { Review } from './reviews/entities/review.entity';
 import { ReviewImage } from './reviews/entities/review-image.entity';
 import { Service } from './services/entities/service.entity';
-import { CartItem } from './cart-items/entities/cart-item.entity'; 
+import { CartItem } from './cart/entities/cart-item.entity'; 
+import { UploadModule } from './upload/upload.module';
+import { ShipperApplication } from './shipper/entities/shipper-application.entity';
+import { ShipperProfile } from './shipper/entities/shipper-profile.entity';
+
+
 
 @Module({
   imports: [
@@ -43,6 +49,8 @@ import { CartItem } from './cart-items/entities/cart-item.entity';
           ReviewImage,
           Service,
           CartItem,
+          ShipperApplication,
+          ShipperProfile,
         ],
         synchronize: false, // Để false vì chúng ta đã có schema từ file .sql
       }),
@@ -55,9 +63,9 @@ import { CartItem } from './cart-items/entities/cart-item.entity';
     CollectionsModule,
     ServicesModule,
     DashboardModule,
-    CartItemsModule
+    ShipperModule,
+    CartModule,
+    UploadModule
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}

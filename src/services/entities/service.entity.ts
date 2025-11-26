@@ -1,6 +1,6 @@
 import { OrderItem } from 'src/orders/entities/order-item.entity';
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { CartItem } from 'src/cart-items/entities/cart-item.entity';
+import { CartItem } from 'src/cart/entities/cart-item.entity';
 @Entity('services')
 export class Service {
   @PrimaryGeneratedColumn()

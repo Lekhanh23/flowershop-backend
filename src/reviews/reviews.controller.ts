@@ -11,7 +11,10 @@ import {
   import { RolesGuard } from 'src/auth/guards/roles.guard';
   import { Roles } from 'src/auth/decorators/roles.decorator';
   import { UserRole } from 'src/users/entities/user.entity';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
   
+  @ApiTags('Reviews')
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Controller('admin/reviews')

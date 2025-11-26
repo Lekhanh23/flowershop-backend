@@ -1,7 +1,7 @@
 import { Collection } from 'src/collections/entities/collection.entity';
 import { OrderItem } from 'src/orders/entities/order-item.entity';
 import { Review } from 'src/reviews/entities/review.entity';
-import { CartItem } from 'src/cart-items/entities/cart-item.entity';
+import { CartItem } from 'src/cart/entities/cart-item.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,

@@ -16,8 +16,11 @@ import {
   import { RolesGuard } from 'src/auth/guards/roles.guard';
   import { Roles } from 'src/auth/decorators/roles.decorator';
   import { UserRole } from 'src/users/entities/user.entity';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
   
   // Bảo vệ toàn bộ controller: Yêu cầu login và phải là Admin
+  @ApiTags('Products')
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Controller('admin/products') // Đặt prefix /admin

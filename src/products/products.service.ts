@@ -14,7 +14,7 @@ export class ProductsService {
     @InjectRepository(Collection)
     private collectionRepository: Repository<Collection>,
   ) {}
-
+   //Phần 1: DÀNH CHO ADMIN
   async create(createProductDto: CreateProductDto): Promise<Product> {
     const { collection_id, ...rest } = createProductDto;
     const newProduct = this.productRepository.create(rest);
@@ -32,13 +32,14 @@ export class ProductsService {
     return this.productRepository.save(newProduct);
   }
 
-  async findAllPaginated(page: number, limit: number) {
+  async findAllPaginated(page: number = 1, limit: number = 10) {
     const [data, total] = await this.productRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
       relations: ['collection'], // Lấy thông tin collection
+      order: {created_at: 'DESC'},
     });
-    return { data, total, page, limit };
+    return { data, total, page, limit, last_page: Math.ceil(total/limit) };
   }
 
   async findOne(id: number): Promise<Product> {
@@ -79,5 +80,26 @@ export class ProductsService {
     if (result.affected === 0) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
+  }
+
+  //PHẦN 2: DÀNH CHO CUSTOMER
+  async findAllPublic(query:{page?: number; limit?: number; collection_id?: number}) {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const qb = this.productRepository.createQueryBuilder('product');
+    qb.leftJoinAndSelect('product.collection', 'collection')
+    .where('product.status = :status', {status: 'in_stock'})
+    .orderBy('product.created_at', 'DESC').skip((page - 1) * limit).take(limit);
+    if(query.collection_id) {
+      qb.andWhere('product.collectionId = :colId', {colId: query.collection_id});
+    }
+    const [data, total] = await qb.getManyAndCount();
+    return {
+      data,
+      total,
+      page,
+      limit,
+      last_page: Math.ceil(total / limit),
+    };
   }
 }

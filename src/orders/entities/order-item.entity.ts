@@ -15,18 +15,10 @@ export class OrderItem {
   id: number;
 
   @Column({ name: 'order_id' })
-  order_id: number;
-
-  @ManyToOne(() => Order, (order) => order.orderItems)
-  @JoinColumn({ name: 'order_id' })
-  order: Order;
+  orderId: number;
 
   @Column({ name: 'product_id' })
-  product_id: number;
-
-  @ManyToOne(() => Product, (product) => product.orderItems)
-  @JoinColumn({ name: 'product_id' })
-  product: Product;
+  productId: number;
 
   @Column({ default: 1 })
   quantity: number;
@@ -35,9 +27,17 @@ export class OrderItem {
   price: number;
 
   @Column({ name: 'service_id', nullable: true })
-  service_id: number;
+  serviceId: number;
 
-  @ManyToOne(() => Service, (service) => service.orderItems)
+  @ManyToOne(() => Service, {nullable: true})
   @JoinColumn({ name: 'service_id' })
   service: Service;
+
+  @ManyToOne(() => Order, (order) => order.orderItems, {onDelete: 'CASCADE'})
+  @JoinColumn({ name: 'order_id' })
+  order: Order;
+
+  @ManyToOne(() => Product)
+  @JoinColumn({ name: 'product_id' })
+  product: Product;
 }

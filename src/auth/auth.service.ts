@@ -1,70 +1,70 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UsersService } from 'src/users/users.service';
-import { JwtService } from '@nestjs/jwt';
+import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from 'bcrypt';
-import { User } from 'src/users/entities/user.entity';
+import { UsersService } from "src/users/users.service";
+import { LoginDto } from "./dto/login.dto";
+import { RegisterDto } from "./dto/register.dto";
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
+    private usersService : UsersService,
+    private jwtService : JwtService,
   ) {}
 
-  // Dùng cho LocalStrategy
-  // src/auth/auth.service.ts
-
+  //Hàm này được LocalStrategy gọi để kiểm trs user/pass
   async validateUser(email: string, pass: string): Promise<any> {
-    
-    // --- BẮT ĐẦU DEBUG ---
-    console.log("=================================");
-    console.log("BẮT ĐẦU KIỂM TRA ĐĂNG NHẬP");
-    console.log("Email nhận được:", email);
-    console.log("Password nhận được (từ frontend):", pass); // <-- Dòng này quan trọng nhất
-    // --- KẾT THÚC DEBUG ---
-
     const user = await this.usersService.findOneByEmail(email);
-
-    if (user) {
-      console.log("Hash trong CSDL:", user.password); // <-- Xem hash
-      const isMatch = await bcrypt.compare(pass, user.password);
-      console.log("Kết quả so sánh (isMatch):", isMatch); // <-- Xem kết quả
-      
-      if (isMatch) {
-        console.log(">>> ĐĂNG NHẬP THÀNH CÔNG");
-        const { password, ...result } = user;
-        return result;
-      }
-    } else {
-      console.log("--- LỖI: Không tìm thấy user này.");
+    if(user && await bcrypt.compare(pass, user.password)) {
+      const {password, ...result} = user;
+      return result;
     }
-
-    console.log(">>> ĐĂNG NHẬP THẤT BẠI");
-    console.log("=================================");
     return null;
   }
 
-  // Dùng cho Login
-  async login(user: User) {
-    // Chỉ admin mới được login vào trang admin
-    if (user.role !== 'admin') {
-      throw new UnauthorizedException('Access denied. Only admins can login.');
+  async login(loginDto : LoginDto) {
+    const {email, password} = loginDto;
+    //Tìm user trong database
+    const user = await this.usersService.findOneByEmail(email);
+    if(!user) {
+      throw new UnauthorizedException("Email hoặc mật khẩu không đúng!");
     }
-    
-    const payload = { email: user.email, sub: user.id, role: user.role };
+
+    //So sánh mật khẩu đăng nhập và mật khẩu mã hoá trong DB
+    const isMatch = await bcrypt.compare(password, user.password);
+    if(!isMatch) {
+      throw new UnauthorizedException("Email hoặc mật khẩu không đúng!");
+    }
+
+    //Tạo JWT Token
+    const payload = {sub: user.id, email: user.email, role: user.role};
+    const accessToken = this.jwtService.sign(payload);
+
+    //Trả về Token và thông tin User (password)
+    const {password: pw, ...publicUser} = user;
     return {
-      access_token: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        full_name: user.full_name,
-        role: user.role,
-      },
-    };
+      access_token: accessToken,
+      user: publicUser
+    }
   }
-  async getHash(password: string): Promise<string> {
-    const saltRounds = 10;
-    const hash = await bcrypt.hash(password, saltRounds);
-    return hash;
+
+  async register(registerDto: RegisterDto) {
+    //1. Check email
+    const existingUser = await this.usersService.findOneByEmail(registerDto.email);
+    if(existingUser) {
+      throw new BadRequestException("Email đã tồn tại!");
+    }
+    //2. Hash password
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(registerDto.password, salt);
+    //3. Create new user
+    const newUser = await this.usersService.create({
+      ...registerDto,
+      password: hashedPassword,
+      role: 'customer'
+    })
+    //4. Output
+    const {password, ...result} = newUser;
+    return result;
   }
 }

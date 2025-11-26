@@ -49,11 +49,15 @@ export class ServicesService {
   }
 
   async remove(id: number): Promise<void> {
-    // Lưu ý: Mặc định (ON DELETE SET NULL), khi xóa service,
-    // các order_items.service_id và cart_items.service_id sẽ bị set về NULL.
     const result = await this.serviceRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Service with ID ${id} not found`);
     }
+  }
+
+  async findAllPublic(): Promise<Service[]> {
+    return this.serviceRepository.find({
+      order: {price: 'ASC'},
+    });
   }
 }

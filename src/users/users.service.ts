@@ -56,4 +56,9 @@ export class UsersService {
     // Nếu 'user' là 'undefined' (không tìm thấy), nó sẽ trả về 'null'
     return user || null;
   }
+
+  async create(userData: any): Promise<User> {
+    const newUser = this.userRepository.create(userData as User);
+    return this.userRepository.save(newUser);
+  }
 }

@@ -16,17 +16,23 @@ export enum OrderStatus {
   DELIVERED = 'delivered',
 }
 
+export enum DeliveryStatus {
+  UNASSIGNED = 'unassigned',
+  ASSIGNED = 'assigned',
+  PICKED_UP = 'picked_up',
+  IN_TRANSIT = 'in_transit',
+  DELIVERED = 'delivered',
+  FAILED = 'failed',
+  CANCELLED = 'cancelled',
+}
+
 @Entity('orders')
 export class Order {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ name: 'user_id' })
-  user_id: number;
-
-  @ManyToOne(() => User, (user) => user.orders)
-  @JoinColumn({ name: 'user_id' })
-  user: User;
+  userId: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total_amount: number;
@@ -41,6 +47,34 @@ export class Order {
   })
   status: OrderStatus;
 
-  @OneToMany(() => OrderItem, (item) => item.order)
+  @Column({name: 'shipper_id', nullable: true})
+  shipperId: number;
+
+  @Column({
+    type: 'enum',
+    enum: DeliveryStatus,
+    default: DeliveryStatus.UNASSIGNED,
+    name: 'delivery_status'
+  })
+  deliveryStatus: DeliveryStatus;
+
+  @Column({name: 'pickup_time', nullable: true})
+  pickupTime: Date;
+
+  @Column({name: 'delivered_at', nullable: true})
+  deliveredAt: Date;
+
+  @Column({name: 'tracking_code', nullable: true})
+  trackingCode: string;
+
+  @OneToMany(() => OrderItem, (item) => item.order, {cascade: true})
   orderItems: OrderItem[];
+
+  @ManyToOne(() => User)
+  @JoinColumn({name: 'shipper_id'})
+  shipper: User;
+
+  @ManyToOne(() => User, (user) => user.orders)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 }

@@ -14,7 +14,7 @@ import { Review } from 'src/reviews/entities/review.entity';
     User, 
     Product, 
     Review,
-    OrderItem, // <-- THÊM VÀO ĐÂY
+    OrderItem, 
   ])],
   controllers: [DashboardController],
   providers: [DashboardService],
