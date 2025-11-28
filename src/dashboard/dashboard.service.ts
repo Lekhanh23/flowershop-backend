@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { Collection } from "src/collections/entities/collection.entity";
 import { OrderItem } from "src/orders/entities/order-item.entity";
 import { Order, OrderStatus } from "src/orders/entities/order.entity";
 import { Product } from "src/products/entities/product.entity";
@@ -13,6 +14,7 @@ export class DashboardService {
     @InjectRepository(Product) private productRepo: Repository<Product>,
     @InjectRepository(OrderItem) private orderItemRepo: Repository<OrderItem>,
     @InjectRepository(Review) private reviewRepo: Repository<Review>,
+    @InjectRepository(Collection) private collectionRepo: Repository<Collection>
   ) {}
   async getDashboardStats() {
     //Phần 1: TOP CARDS
@@ -33,6 +35,9 @@ export class DashboardService {
     const lowStockCount = await this.productRepo.createQueryBuilder('product')
     .where('product.stock < :threshold', {threshold: 5}).getCount();
 
+    //5. Number of Collections
+    const totalCollections = await this.collectionRepo.count();
+
     //Phần 2: CHARTS
     //Chart 1: SALE REPORT
     const salesReport = await this.orderRepo.createQueryBuilder('order')
@@ -44,7 +49,7 @@ export class DashboardService {
     const bestSellingProducts = await this.orderItemRepo.createQueryBuilder('oi')
     .leftJoin('oi.product', 'p').select('p.name', 'name')
     .addSelect('SUM(oi.quantity)', 'sold_quantity').groupBy('p.id')
-    .orderBy('sold_quantity', 'DESC').limit(5).getRawMany();
+    .orderBy('sold_quantity', 'DESC').limit(3).getRawMany();
 
     //Chart 3: Order Status Distribution
     const orderStatusDist = await this.orderRepo.createQueryBuilder('order')
@@ -61,6 +66,7 @@ export class DashboardService {
       cards: {
         totalRevenue,
         totalProducts,
+        totalCollections,
         totalOrders,
         lowStockCount
       },

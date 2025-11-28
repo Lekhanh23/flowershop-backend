@@ -37,7 +37,7 @@ export class ProductsService {
       skip: (page - 1) * limit,
       take: limit,
       relations: ['collection'], // Lấy thông tin collection
-      order: {created_at: 'DESC'},
+      order: {id: 'ASC'},
     });
     return { data, total, page, limit, last_page: Math.ceil(total/limit) };
   }

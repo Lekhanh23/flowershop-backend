@@ -7,6 +7,7 @@ import { User } from 'src/users/entities/user.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { OrderItem } from 'src/orders/entities/order-item.entity';
 import { Review } from 'src/reviews/entities/review.entity';
+import { Collection } from 'src/collections/entities/collection.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([
@@ -14,7 +15,8 @@ import { Review } from 'src/reviews/entities/review.entity';
     User, 
     Product, 
     Review,
-    OrderItem, 
+    OrderItem,
+    Collection 
   ])],
   controllers: [DashboardController],
   providers: [DashboardService],

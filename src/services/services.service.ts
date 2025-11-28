@@ -57,7 +57,7 @@ export class ServicesService {
 
   async findAllPublic(): Promise<Service[]> {
     return this.serviceRepository.find({
-      order: {price: 'ASC'},
+      order: {id: 'ASC'},
     });
   }
 }

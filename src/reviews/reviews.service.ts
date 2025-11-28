@@ -15,7 +15,7 @@ export class ReviewsService {
       relations: ['user', 'product', 'reviewImages'],
       skip: (page - 1) * limit,
       take: limit,
-      order: { created_at: 'DESC' },
+      order: { id: 'ASC' },
     });
     return { data, total, page, limit };
   }

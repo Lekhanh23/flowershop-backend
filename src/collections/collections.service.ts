@@ -21,7 +21,7 @@ export class CollectionsService {
     const [data, total] = await this.collectionRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
-      order: { id: 'DESC' },
+      order: { id: 'ASC' },
     });
     return { data, total, page, limit };
   }
@@ -52,8 +52,6 @@ export class CollectionsService {
   }
 
   async remove(id: number): Promise<void> {
-    // Lưu ý: Mặc định (ON DELETE SET NULL), khi xóa collection,
-    // các product.collection_id sẽ bị set về NULL.
     const result = await this.collectionRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Collection with ID ${id} not found`);

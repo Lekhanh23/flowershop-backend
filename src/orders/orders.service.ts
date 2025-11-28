@@ -5,6 +5,8 @@ import { DataSource, FindManyOptions, Repository } from 'typeorm';
 import { CartItem } from 'src/cart/entities/cart-item.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { Product } from 'src/products/entities/product.entity';
+import { User } from 'src/users/entities/user.entity';
+import { ShipperStatus } from 'src/shipper/entities/shipper-profile.entity';
 
 @Injectable()
 export class OrdersService {
@@ -13,6 +15,8 @@ export class OrdersService {
     private orderRepository: Repository<Order>,
     @InjectRepository(CartItem)
     private cartRepository: Repository<CartItem>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private dataSource: DataSource
   ) {}
   //CUSTOMER METHOD
@@ -111,7 +115,7 @@ export class OrdersService {
     relations: ['user', 'shipper'], // <--- THÊM 'shipper' VÀO ĐÂY
     skip: (page - 1) * limit,
     take: limit,
-    order: { order_date: 'DESC' },
+    order: { id: 'ASC' },
   });
 
     return { data, total, page, limit };
@@ -144,12 +148,28 @@ export class OrdersService {
   }
 
   async assignShipper(orderId: number, shipperId: number) {
+    // 1. Tìm đơn hàng
     const order = await this.orderRepository.findOneBy({ id: orderId });
     if (!order) throw new NotFoundException('Order not found');
-
+    // 2. Tìm Shipper và kiểm tra trạng thái
+    const shipper = await this.userRepository.findOne({
+      where: { id: shipperId },
+      relations: ['shipperProfile'] // <--- Quan trọng: Lấy kèm hồ sơ
+    });
+    if (!shipper) throw new NotFoundException('Shipper not found');
+    // Kiểm tra xem có phải shipper không
+    if (shipper.role !== 'shipper') {
+        throw new BadRequestException('User is not a shipper');
+    }
+    // 3. Kiểm tra trạng thái hoạt động
+    const status = shipper.shipperProfile?.status;
+    if (status !== ShipperStatus.AVAILABLE) {
+        throw new BadRequestException(`Shipper này đang không sẵn sàng (Trạng thái: ${status})`);
+    }
+    // 4. Gán đơn (Nếu hợp lệ)
     order.shipperId = shipperId;
-    order.deliveryStatus = DeliveryStatus.ASSIGNED; // Chuyển trạng thái vận chuyển thành Đã gán
-    order.status = OrderStatus.SHIPPED; // Cập nhật trạng thái đơn hàng
+    order.deliveryStatus = DeliveryStatus.ASSIGNED;
+    order.status = OrderStatus.SHIPPED;
     
     return this.orderRepository.save(order);
   }
