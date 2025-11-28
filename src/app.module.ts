@@ -24,6 +24,8 @@ import { CartItem } from './cart/entities/cart-item.entity';
 import { UploadModule } from './upload/upload.module';
 import { ShipperApplication } from './shipper/entities/shipper-application.entity';
 import { ShipperProfile } from './shipper/entities/shipper-profile.entity';
+import { NotificationsModule } from './notifications/notifications.module';
+import { Notification } from './notifications/entities/notification.entity';
 
 
 
@@ -51,6 +53,7 @@ import { ShipperProfile } from './shipper/entities/shipper-profile.entity';
           CartItem,
           ShipperApplication,
           ShipperProfile,
+          Notification
         ],
         synchronize: false, // Để false vì chúng ta đã có schema từ file .sql
       }),
@@ -65,7 +68,8 @@ import { ShipperProfile } from './shipper/entities/shipper-profile.entity';
     DashboardModule,
     ShipperModule,
     CartModule,
-    UploadModule
+    UploadModule,
+    NotificationsModule
   ],
 })
 export class AppModule {}

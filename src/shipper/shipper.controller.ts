@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Body, Param, UseGuards, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param, UseGuards, ParseIntPipe, Query } from '@nestjs/common';
 import { ShipperService } from './shipper.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -8,6 +8,7 @@ import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ReviewApplicationDto } from './dto/review-application.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApplicationStatus } from './entities/shipper-application.entity';
 
 @ApiTags('Shipper')
 @ApiBearerAuth()
@@ -26,7 +27,7 @@ export class ShipperController {
     @Get('applications')
     @UseGuards(RolesGuard)
     @Roles(UserRole.ADMIN)
-    getAllApplications() {
+    getAllApplications(@Query('status') status?: ApplicationStatus) {
         return this.shipperService.findAllApplication();
     }
 

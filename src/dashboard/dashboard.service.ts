@@ -35,7 +35,7 @@ export class DashboardService {
 
     //Phần 2: CHARTS
     //Chart 1: SALE REPORT
-    const saleReport = await this.orderRepo.createQueryBuilder('order')
+    const salesReport = await this.orderRepo.createQueryBuilder('order')
     .select("DATE_FORMAT(order.order_date, '%Y-%m-%d')", 'date')
     .addSelect('SUM(order.total_amount)', 'total').groupBy('date').orderBy('date', 'ASC')
     .limit(7).getRawMany();
@@ -47,7 +47,7 @@ export class DashboardService {
     .orderBy('sold_quantity', 'DESC').limit(5).getRawMany();
 
     //Chart 3: Order Status Distribution
-    const orderStatusDis = await this.orderRepo.createQueryBuilder('order')
+    const orderStatusDist = await this.orderRepo.createQueryBuilder('order')
     .select('order.status', 'status').addSelect('COUNT(order.id)', 'count')
     .groupBy('order.status').getRawMany();
 
@@ -58,16 +58,16 @@ export class DashboardService {
     .limit(5).getRawMany();
 
     return {
-      card: {
+      cards: {
         totalRevenue,
         totalProducts,
         totalOrders,
         lowStockCount
       },
       charts: {
-        saleReport,
+        salesReport,
         bestSellingProducts,
-        orderStatusDis,
+        orderStatusDist,
         topRatedProducts,
       }
     };

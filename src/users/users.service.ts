@@ -12,13 +12,18 @@ export class UsersService {
 
   // *** Dành cho Admin ***
 
-  async findAllCustomers(page: number, limit: number) {
-    const [data, total] = await this.userRepository.findAndCount({
-      where: { role: UserRole.CUSTOMER },
-      skip: (page - 1) * limit,
-      take: limit,
-      order: { id: 'DESC' },
-    });
+  async findAll(page: number, limit: number, role?: UserRole) {
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+    if (role) {
+      queryBuilder.where('user.role = :role', { role });
+    }
+    // Join bảng shipperProfile để lấy status
+    queryBuilder.leftJoinAndSelect('user.shipperProfile', 'shipperProfile');
+    const [data, total] = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('user.id', 'ASC')
+      .getManyAndCount();
     return { data, total, page, limit };
   }
 
@@ -33,26 +38,30 @@ export class UsersService {
     return user;
   }
 
-  async removeCustomer(id: number): Promise<void> {
-    const result = await this.userRepository.delete({
-      id,
-      role: UserRole.CUSTOMER,
-    });
+  async remove(id: number): Promise<void> { // Đổi tên từ removeCustomer
+    const result = await this.userRepository.delete(id);
     if (result.affected === 0) {
-      throw new NotFoundException(`Customer with ID ${id} not found`);
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
+  }
+  async update(id: number, attrs: Partial<User>) {
+    const user = await this.findOneCustomer(id); // Kiểm tra tồn tại
+    if (!user) {
+        throw new NotFoundException('User not found');
+    }
+    // Chỉ cho phép update một số trường nhất định
+    Object.assign(user, attrs);
+    return this.userRepository.save(user);
   }
 
   // *** Dành cho Auth ***
   async findOneByEmail(email: string): Promise<User | null> {
-    // Auth cần lấy cả password, nên dùng query builder hoặc addSelect
+    // Auth cần lấy cả password
     const user = await this.userRepository
       .createQueryBuilder('user')
       .where('user.email = :email', { email })
       .addSelect('user.password') // Rất quan trọng
       .getOne();
-  
-    // Thêm dòng này:
     // Nếu 'user' là 'undefined' (không tìm thấy), nó sẽ trả về 'null'
     return user || null;
   }

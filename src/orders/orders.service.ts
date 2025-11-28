@@ -101,18 +101,18 @@ export class OrdersService {
   }
 //ADMIN METHOD
   async findAllPaginated(page: number, limit: number, status?: string) {
-    const whereOptions: FindManyOptions<Order>['where'] = {};
-    if (status) {
-      whereOptions.status = status as OrderStatus;
-    }
+  const whereOptions: FindManyOptions<Order>['where'] = {};
+  if (status) {
+    whereOptions.status = status as OrderStatus;
+  }
 
-    const [data, total] = await this.orderRepository.findAndCount({
-      where: whereOptions,
-      relations: ['user'], // Lấy thông tin user
-      skip: (page - 1) * limit,
-      take: limit,
-      order: { order_date: 'DESC' },
-    });
+  const [data, total] = await this.orderRepository.findAndCount({
+    where: whereOptions,
+    relations: ['user', 'shipper'], // <--- THÊM 'shipper' VÀO ĐÂY
+    skip: (page - 1) * limit,
+    take: limit,
+    order: { order_date: 'DESC' },
+  });
 
     return { data, total, page, limit };
   }
@@ -140,6 +140,17 @@ export class OrdersService {
       throw new NotFoundException(`Order with ID ${id} not found`);
     }
     order.status = status;
+    return this.orderRepository.save(order);
+  }
+
+  async assignShipper(orderId: number, shipperId: number) {
+    const order = await this.orderRepository.findOneBy({ id: orderId });
+    if (!order) throw new NotFoundException('Order not found');
+
+    order.shipperId = shipperId;
+    order.deliveryStatus = DeliveryStatus.ASSIGNED; // Chuyển trạng thái vận chuyển thành Đã gán
+    order.status = OrderStatus.SHIPPED; // Cập nhật trạng thái đơn hàng
+    
     return this.orderRepository.save(order);
   }
 //SHIPPER METHOD

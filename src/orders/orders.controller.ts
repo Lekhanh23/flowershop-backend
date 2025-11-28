@@ -79,6 +79,17 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
     return this.ordersService.updateStatus(id, updateOrderStatusDto.status);
   }
 
+  //Gán shipper cho đơn hàng
+  @Patch('admin/:id/assign')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  assignShipper(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('shipperId', ParseIntPipe) shipperId: number,
+  ) {
+    return this.ordersService.assignShipper(id, shipperId);
+  }
+
   //SHIPPER METHOD
   //Xem danh sách đơn được giao
   @Get('shipper/my-shipments')
@@ -99,4 +110,5 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
   ) {
     return this.ordersService.updateDeliveryStatus(id, shipper.id, status);
   }
-  }
+
+}
