@@ -3,10 +3,11 @@ import { CollectionsService } from './collections.service';
 import { CollectionsController } from './collections.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Collection } from './entities/collection.entity';
+import { PublicCollectionsController } from './public-collections.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Collection])],
-  controllers: [CollectionsController],
+  controllers: [CollectionsController, PublicCollectionsController],
   providers: [CollectionsService],
 })
 export class CollectionsModule {}

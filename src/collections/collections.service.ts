@@ -57,4 +57,11 @@ export class CollectionsService {
       throw new NotFoundException(`Collection with ID ${id} not found`);
     }
   }
+
+  async findAllPublic(){
+    return this.collectionRepository.find({
+      take: 12,
+      order: {id: 'ASC'},
+    })
+  }
 }
