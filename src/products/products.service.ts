@@ -91,7 +91,7 @@ export class ProductsService {
     .where('product.status = :status', {status: 'in_stock'})
     .orderBy('product.created_at', 'DESC').skip((page - 1) * limit).take(limit);
     if(query.collection_id) {
-      qb.andWhere('product.collectionId = :colId', {colId: query.collection_id});
+      qb.andWhere('product.collection_id = :colId', {colId: query.collection_id});
     }
     const [data, total] = await qb.getManyAndCount();
     return {

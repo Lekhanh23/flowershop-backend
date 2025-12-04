@@ -7,6 +7,7 @@ import { OrderItem } from './entities/order-item.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { User } from 'src/users/entities/user.entity';
 import { ShipperStatus } from 'src/shipper/entities/shipper-profile.entity';
+import { NotificationsService } from 'src/notifications/notifications.service';
 
 @Injectable()
 export class OrdersService {
@@ -17,7 +18,8 @@ export class OrdersService {
     private cartRepository: Repository<CartItem>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    private dataSource: DataSource
+    private dataSource: DataSource,
+    private notifService: NotificationsService
   ) {}
   //CUSTOMER METHOD
   //Tạo đơn hàng từ giỏ hàng
@@ -74,6 +76,13 @@ export class OrdersService {
 
       //3.4: Lưu thay đổi
       await queryRunner.commitTransaction();
+      await this.notifService.create({
+        userId: userId,
+        targetUserId: userId,
+        orderId: savedOrder.id,
+        type: 'Order',
+        message: `You have successfully placed order #${savedOrder.id} with total ${savedOrder.total_amount.toLocaleString()}đ`,
+      })
       return savedOrder;
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -112,7 +121,7 @@ export class OrdersService {
 
   const [data, total] = await this.orderRepository.findAndCount({
     where: whereOptions,
-    relations: ['user', 'shipper'], // <--- THÊM 'shipper' VÀO ĐÂY
+    relations: ['user', 'shipper'], 
     skip: (page - 1) * limit,
     take: limit,
     order: { id: 'ASC' },
@@ -125,10 +134,10 @@ export class OrdersService {
     const order = await this.orderRepository.findOne({
       where: { id },
       relations: [
-        'user', // Thông tin người đặt
-        'orderItems', // Các sản phẩm trong đơn
-        'orderItems.product', // Chi tiết sản phẩm
-        'orderItems.service', // Chi tiết dịch vụ
+        'user', 
+        'orderItems', 
+        'orderItems.product', 
+        'orderItems.service', 
       ],
     });
 
@@ -154,7 +163,7 @@ export class OrdersService {
     // 2. Tìm Shipper và kiểm tra trạng thái
     const shipper = await this.userRepository.findOne({
       where: { id: shipperId },
-      relations: ['shipperProfile'] // <--- Quan trọng: Lấy kèm hồ sơ
+      relations: ['shipperProfile'] 
     });
     if (!shipper) throw new NotFoundException('Shipper not found');
     // Kiểm tra xem có phải shipper không

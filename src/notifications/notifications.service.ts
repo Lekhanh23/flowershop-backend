@@ -10,12 +10,17 @@ export class NotificationsService {
     private notifRepo: Repository<Notification>,
   ) {}
 
+  async create(data: Partial<Notification>) {
+    const newNotif = this.notifRepo.create(data);
+    return this.notifRepo.save(newNotif);
+  }
+
   async findAllPaginated(page: number, limit: number) {
     const [data, total] = await this.notifRepo.findAndCount({
       relations: ['user', 'targetUser', 'product', 'order'],
       skip: (page - 1) * limit,
       take: limit,
-      order: { createdAt: 'DESC' },
+      order: { id: 'ASC' },
       select: ['id', 'type', 'message', 'createdAt', 'userId']
     });
     return { data, total, page, limit };

@@ -4,12 +4,14 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from "src/users/users.service";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
+import { NotificationsService } from "src/notifications/notifications.service";
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService : UsersService,
     private jwtService : JwtService,
+    private notifService : NotificationsService,
   ) {}
 
   //Hàm này được LocalStrategy gọi để kiểm trs user/pass
@@ -35,6 +37,14 @@ export class AuthService {
     if(!isMatch) {
       throw new UnauthorizedException("Email hoặc mật khẩu không đúng!");
     }
+
+    //Tạo thông báo
+    await this.notifService.create({
+      userId: user.id,
+      targetUserId: user.id,
+      type: 'Login',
+      message: 'You have logged in successfully.'
+    })
 
     //Tạo JWT Token
     const payload = {sub: user.id, email: user.email, role: user.role};
@@ -66,5 +76,15 @@ export class AuthService {
     //4. Output
     const {password, ...result} = newUser;
     return result;
+  }
+
+  async logout(userId: number){
+    await this.notifService.create({
+      userId: userId,
+      targetUserId: userId,
+      type: 'Logout',
+      message: 'You have logged out.'
+    });
+    return {message: 'Đăng xuất thành công'};
   }
 }

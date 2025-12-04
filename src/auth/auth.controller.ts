@@ -32,10 +32,11 @@ export class AuthController {
   }
 
   //API Đăng xuất
+  @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout() {
-    return {message: 'Đăng xuất thành công'};
+  async logout(@GetUser() user: User) {
+    return this.authService.logout(user.id);
   }
 
   //API Register
