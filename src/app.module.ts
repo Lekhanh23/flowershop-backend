@@ -37,7 +37,13 @@ import { Notification } from './notifications/entities/notification.entity';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
-        socketPath: '/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock',
+        socketPath: '/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock', //Windows xoá dòng này
+        //Cấu hình cho Windows 
+        //host: 'localhost',
+        //port: 3306,
+        //username: 'root',
+        //password: '',
+        //database: 'flowershop'
         username: configService.get<string>('DB_USER')!,
         password: configService.get<string>('DB_PASS')!,
         database: configService.get<string>('DB_NAME')!,
