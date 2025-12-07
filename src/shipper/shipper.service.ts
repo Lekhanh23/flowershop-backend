@@ -6,6 +6,7 @@ import { ShipperProfile, ShipperStatus } from './entities/shipper-profile.entity
 import { User, UserRole } from 'src/users/entities/user.entity';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { ReviewApplicationDto } from './dto/review-application.dto';
+import { NotificationsService } from 'src/notifications/notifications.service';
 
 @Injectable()
 export class ShipperService {
@@ -14,6 +15,9 @@ export class ShipperService {
         private applicationRepo: Repository<ShipperApplication>,
         @InjectRepository(ShipperProfile)
         private profileRepo: Repository<ShipperProfile>,
+        @InjectRepository(User)
+        private userRepo: Repository<User>,
+        private notiService: NotificationsService,
         private dataSource: DataSource,
     ) { }
 
@@ -25,6 +29,15 @@ export class ShipperService {
         if (existing) throw new BadRequestException("Bạn đã có đơn đang chờ duyệt.");
 
         const app = this.applicationRepo.create({ userId: user.id, ...dto });
+        const admins = await this.userRepo.find({where: {role: UserRole.ADMIN}});
+        for(const admin of admins) {
+            await this.notiService.create({
+                userId: admin.id,
+                targetUserId: user.id,
+                type: 'Shipper Registration',
+                message: `User ${user.full_name} has submitted a new apllication.`
+            })
+        }
         return this.applicationRepo.save(app);
     }
 
@@ -50,6 +63,12 @@ export class ShipperService {
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
+        const isApproved = dto.status === ApplicationStatus.APPROVED;
+        await this.notiService.create({
+            userId: application.userId,
+            type: 'Application Review',
+            message: isApproved ? 'Chúc mừng! Đơn đăng ký Shipper của bạn đã được CHẤP THUẬN.' : 'Đơn đăng ký Shipper của bạn đã bị TỪ CHỐI.'
+        })
 
         try {
             // B1: Update Application Status

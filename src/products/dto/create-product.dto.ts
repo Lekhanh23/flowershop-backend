@@ -24,7 +24,7 @@ import {
   
     @IsString()
     @IsOptional()
-    image: string; // Tạm thời là string, có thể nâng cấp lên file upload
+    image: string; 
   
     @IsInt()
     @IsOptional()

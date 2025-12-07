@@ -5,7 +5,7 @@ import { DataSource, FindManyOptions, Repository } from 'typeorm';
 import { CartItem } from 'src/cart/entities/cart-item.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { Product } from 'src/products/entities/product.entity';
-import { User } from 'src/users/entities/user.entity';
+import { User, UserRole } from 'src/users/entities/user.entity';
 import { ShipperStatus } from 'src/shipper/entities/shipper-profile.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
 
@@ -83,6 +83,17 @@ export class OrdersService {
         type: 'Order',
         message: `You have successfully placed order #${savedOrder.id} with total ${savedOrder.total_amount.toLocaleString()}đ`,
       })
+      const admins = await this.userRepository.find({where: {role: UserRole.ADMIN}});
+      const customers = await this.userRepository.findOneBy({id: userId});
+      for(const admin of admins) {
+        await this.notifService.create({
+          userId: admin.id,
+          targetUserId: userId,
+          orderId: savedOrder.id,
+          type: 'New Order',
+          message: `Customer ${customers?.full_name} has placed a new order #${savedOrder.id} worth ${savedOrder.total_amount.toLocaleString}đ`,
+        })
+      }
       return savedOrder;
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -158,7 +169,7 @@ export class OrdersService {
 
   async assignShipper(orderId: number, shipperId: number) {
     // 1. Tìm đơn hàng
-    const order = await this.orderRepository.findOneBy({ id: orderId });
+    const order = await this.orderRepository.findOne({where: {id: orderId},relations: ['user'] });
     if (!order) throw new NotFoundException('Order not found');
     // 2. Tìm Shipper và kiểm tra trạng thái
     const shipper = await this.userRepository.findOne({
@@ -179,12 +190,28 @@ export class OrdersService {
     order.shipperId = shipperId;
     order.deliveryStatus = DeliveryStatus.ASSIGNED;
     order.status = OrderStatus.SHIPPED;
-    
-    return this.orderRepository.save(order);
+    const savedOrder = await this.orderRepository.save(order);
+    await this.notifService.create({
+      userId: shipperId,
+      targetUserId: shipperId,
+      orderId: savedOrder.id,
+      type: 'New Shipment',
+      message: `Bạn được phân công giao đơn hàng #${savedOrder.id}. Vui lòng kiểm tra danh sách đơn giao.`,
+    });
+    if(order.user) {
+      await this.notifService.create({
+        userId: order.user.id,
+        targetUserId: shipperId,
+        orderId: savedOrder.id,
+        type: 'Order Update',
+        message: `Đơn hàng #${savedOrder.id} đã được bàn giao cho Shipper: ${shipper.full_name} - SĐT ${shipper.phone}.`,
+      })
+    }
+    return savedOrder;
   }
 //SHIPPER METHOD
   async updateDeliveryStatus(orderId: number, shipperId: number, status: DeliveryStatus) {
-    const order = await this.orderRepository.findOne({where: {id: orderId}});
+    const order = await this.orderRepository.findOne({where: {id: orderId}, relations: ['user', 'shipper']});
     if(!order) {
       throw new NotFoundException("Order Not Found");
     }
@@ -199,9 +226,24 @@ export class OrdersService {
       order.status = OrderStatus.DELIVERED;
       order.deliveredAt = new Date();
     }
-    return this.orderRepository.save(order);
+    const savedOrder = await this.orderRepository.save(order);
+    if(order.user) {
+      let message = `Đơn hàng #${order.id} cập nhật trạng thái: ${status}.`;
+      if(status === DeliveryStatus.PICKED_UP || status === DeliveryStatus.IN_TRANSIT) {
+        message =`Shipper ${order.shipper?.full_name} (SDT: ${order.shipper?.phone}) đang giao đơn hàng #${order.id} cho bạn.`;
+      } else if(status === DeliveryStatus.DELIVERED) {
+        message = `Đơn hàng #${order.id} đã được giao thành công! Cảm ơn bạn đã mua hàng.`;
+      }
+      await this.notifService.create({
+        userId: order.user.id,
+        targetUserId: shipperId,
+        orderId: order.id,
+        type: 'Order Status',
+        message: message,
+      });
+    }
+    return savedOrder;
   }
-
   async getMyShipments(shipperId: number) {
     return this.orderRepository.find({
       where: {shipperId},

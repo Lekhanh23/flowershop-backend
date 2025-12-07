@@ -4,9 +4,11 @@ import { ShipperService } from './shipper.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ShipperApplication } from './entities/shipper-application.entity';
 import { ShipperProfile } from './entities/shipper-profile.entity';
+import { User } from 'src/users/entities/user.entity';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ShipperApplication, ShipperProfile])],
+  imports: [TypeOrmModule.forFeature([ShipperApplication, ShipperProfile, User]), NotificationsModule],
   controllers: [ShipperController],
   providers: [ShipperService],
   exports: [ShipperService]
