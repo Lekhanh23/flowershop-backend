@@ -181,7 +181,7 @@ export class ShipperService {
             return sum + Number(order.total_amount || 0); 
         }, 0);
 
-        const totalIncome = totalRevenue * 0.20;
+        const totalIncome = totalRevenue * 0.10;
 
         return { pending, totalDelivered, totalIncome };
     }
@@ -201,12 +201,14 @@ export class ShipperService {
         const date = new Date();
         date.setDate(date.getDate() - days);
 
-        return this.orderRepo.createQueryBuilder('order')
-            .where('order.shipperId = :userId', { userId })
-            .andWhere('order.deliveryStatus IN (:...statuses)', { statuses: ['delivered', 'failed', 'cancelled'] })
-            .andWhere('order.order_date >= :date', { date })
-            .orderBy('order.order_date', 'DESC')
-            .getMany();
+        return this.orderRepo.find({
+            where: {
+                shipperId: userId,
+                deliveryStatus: In(['delivered', 'failed', 'cancelled'] as any[]),
+            },
+            order: { order_date: 'DESC' },
+            relations: ['user'] 
+        });
     }
 
     async getOrderDetail(userId: number, orderId: number) {
@@ -233,5 +235,9 @@ export class ShipperService {
         }
 
         return this.orderRepo.save(order);
+    }
+
+    async getNotifications(userId: number, page: number = 1, limit: number = 20) {
+        return this.notiService.findByUser(userId, page, limit);
     }
 }

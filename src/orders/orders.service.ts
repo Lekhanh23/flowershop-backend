@@ -125,7 +125,6 @@ export class OrdersService {
     order.status = OrderStatus.SHIPPED;
     const savedOrder = await this.orderRepository.save(order);
 
-    // [FIX] 'shipper_assignment' (đúng với DB)
     await this.notifService.create({
       userId: shipperId,
       targetUserId: shipperId,
@@ -135,7 +134,6 @@ export class OrdersService {
     });
 
     if(order.user) {
-      // [FIX] 'order_status' (đúng với DB)
       await this.notifService.create({
         userId: order.user.id,
         targetUserId: shipperId,
@@ -172,7 +170,6 @@ export class OrdersService {
         message = `Đơn hàng #${order.id} đã giao thành công! Cảm ơn bạn.`;
       }
       
-      // [FIX] 'order_status' (đúng với DB)
       await this.notifService.create({
         userId: order.user.id,
         targetUserId: shipperId,

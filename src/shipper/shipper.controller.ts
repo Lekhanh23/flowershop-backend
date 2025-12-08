@@ -144,4 +144,14 @@ export class ShipperController {
         const proofPath = file ? file.filename : undefined;
         return this.shipperService.updateOrderStatus(user.id, id, status, proofPath);
     }
+
+    @Get('notifications')
+    @Roles(UserRole.SHIPPER)
+    getNotifications(
+        @GetUser() user: User,
+        @Query('page') page: number = 1,
+        @Query('limit') limit: number = 20
+    ) {
+        return this.shipperService.getNotifications(user.id, page, limit);
+    }
 }

@@ -32,4 +32,14 @@ export class NotificationsService {
       throw new NotFoundException(`Notification #${id} not found`);
     }
   }
+
+  async findByUser(userId: number, page: number, limit: number) {
+    const [data, total] = await this.notifRepo.findAndCount({
+        where: { targetUserId: userId },
+        order: { createdAt: 'DESC' }, 
+        skip: (page - 1) * limit,
+        take: limit,
+    });
+    return { data, total, page, limit };
+  }
 }
