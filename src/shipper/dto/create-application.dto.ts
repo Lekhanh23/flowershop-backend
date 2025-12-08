@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsJSON } from "class-validator";
+import { IsString, IsOptional } from "class-validator";
 
 export class CreateApplicationDto {
     @IsString()

@@ -1,0 +1,10 @@
+import { IsNotEmpty, MinLength } from "class-validator";
+
+export class ChangePasswordDto {
+    @IsNotEmpty()
+    oldPassword: string;
+
+    @IsNotEmpty()
+    @MinLength(6, {message: 'New password must be at least 6 characters'})
+    newPassword: string;
+}
