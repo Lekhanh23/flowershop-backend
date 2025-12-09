@@ -18,7 +18,7 @@ export class DashboardService {
   ) {}
   async getDashboardStats() {
     //Phần 1: TOP CARDS
-    //1. Total Revenue (Chỉ tính đơn đã Shipped hoặc Delivered để chắc chắn có tiền)
+    //1. Total Revenue 
     const revenueResult = await this.orderRepo.createQueryBuilder('order')
     .select('SUM(order.total_amount)', 'total')
     .where('order.status IN (:...statuses)', {statuses: [OrderStatus.SHIPPED, OrderStatus.DELIVERED]})

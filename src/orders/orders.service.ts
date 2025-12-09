@@ -70,7 +70,7 @@ export class OrdersService {
       await queryRunner.manager.delete(CartItem, {userId});
       await queryRunner.commitTransaction();
 
-      // [FIX] 'order_status' (đúng với DB)
+      // 'order_status' 
       await this.notifService.create({
         userId: userId,
         targetUserId: userId,
@@ -82,7 +82,7 @@ export class OrdersService {
       const admins = await this.userRepository.find({where: {role: UserRole.ADMIN}});
       const customers = await this.userRepository.findOneBy({id: userId});
       for(const admin of admins) {
-        // [FIX] 'admin_message' (đúng với DB)
+        // 'admin_message' 
         await this.notifService.create({
           userId: admin.id,
           targetUserId: userId,
