@@ -1,62 +1,66 @@
 import {
-    Controller,
-    Get,
-    Param,
-    Delete,
-    UseGuards,
-    Query,
-    Patch,
-    Body
-  } from '@nestjs/common';
-  import { UsersService } from './users.service';
-  import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-  import { RolesGuard } from 'src/auth/guards/roles.guard';
-  import { Roles } from 'src/auth/decorators/roles.decorator';
-  import { UserRole, User } from './entities/user.entity';
-  import { ApiBearerAuth, ApiTags, ApiQuery } from '@nestjs/swagger';
+  Controller, Get, Param, Delete, UseGuards, Query, Patch, Body, Request
+} from '@nestjs/common';
+import { UsersService } from './users.service';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { UserRole } from './entities/user.entity';
+import { ApiBearerAuth, ApiTags, ApiQuery } from '@nestjs/swagger';
+import { UpdateUserDto } from './dto/update-user.dto'; 
+
+@ApiTags('User')
+@ApiBearerAuth()
+@Controller('users') 
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  // --- CÁC API DÀNH CHO ADMIN  ---
   
-  @ApiTags('User')
-  @ApiBearerAuth()
+  @Get('admin/list') // Admin xem danh sách
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  @Controller('admin/users')
-  export class UsersController {
-    constructor(private readonly usersService: UsersService) {}
-
-    @Get()
-  @ApiQuery({ name: 'role', enum: UserRole, required: false })// Hiển thị trên Swagger
+  @ApiQuery({ name: 'role', enum: UserRole, required: false })
   findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-    @Query('role') role?: UserRole, // Nhận tham số role
-  ) {
-    return this.usersService.findAll(page, limit, role);
-  }
-
-    // Use Case: Manage Customer Accounts (View List)
-    @Get()
-    findAllCustomers(
       @Query('page') page: number = 1,
       @Query('limit') limit: number = 10,
-    ) {
-      return this.usersService.findAll(page, limit);
-    }
-  
-    // Use Case: Manage Customer Accounts (View Detail)
-    @Get(':id')
-    findOneCustomer(@Param('id') id: string) {
-      return this.usersService.findOneCustomer(+id);
-    }
-  
-    // Use Case: Manage User Accounts (Delete)
-    @Delete(':id')
-    remove(@Param('id') id: string) {
-      return this.usersService.remove(+id);
-    }
+      @Query('role') role?: UserRole,
+  ) {
+      return this.usersService.findAll(page, limit, role);
+  }
 
-    // Use Case: Update Customer Info
-    @Patch(':id')
+  @Get('admin/:id') // Admin xem chi tiết khách
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  findOneCustomer(@Param('id') id: string) {
+      return this.usersService.findOneCustomer(+id);
+  }
+
+  @Delete('admin/:id') // Admin xóa user
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  remove(@Param('id') id: string) {
+      return this.usersService.remove(+id);
+  }
+
+  @Patch('admin/:id') // Admin sửa user
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   update(@Param('id') id: string, @Body() body: any) {
-    return this.usersService.update(+id, body);
+      return this.usersService.update(+id, body);
   }
+
+  // --- CÁC API CÁ NHÂN (PROFILE)  ---
+
+  @UseGuards(JwtAuthGuard) 
+  @Get('profile') // => /api/users/profile
+  getProfile(@Request() req) {
+      return this.usersService.findOne(req.user.id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('profile') // => /api/users/profile
+  updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
+      return this.usersService.update(req.user.id, updateUserDto);
+  }
+}

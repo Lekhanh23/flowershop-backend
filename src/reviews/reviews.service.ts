@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Review } from './entities/review.entity';
 import { Repository } from 'typeorm';
+import { CreateReviewDto } from './dto/create-review.dto';
 
 @Injectable()
 export class ReviewsService {
@@ -26,5 +27,16 @@ export class ReviewsService {
     if (result.affected === 0) {
       throw new NotFoundException(`Review with ID ${id} not found`);
     }
+  }
+
+  async create(userId: number, dto: CreateReviewDto) {
+    const newReview = this.reviewRepository.create({
+      user_id: userId,
+      product_id: dto.productId,
+      rating: dto.rating,
+      comment: dto.comment,
+    });
+    
+    return this.reviewRepository.save(newReview);
   }
 }

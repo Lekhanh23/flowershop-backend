@@ -45,11 +45,7 @@ export class UsersService {
     }
   }
   async update(id: number, attrs: Partial<User>) {
-    const user = await this.findOneCustomer(id); // Kiểm tra tồn tại
-    if (!user) {
-        throw new NotFoundException('User not found');
-    }
-    // Chỉ cho phép update một số trường nhất định
+    const user = await this.findOne(id); 
     Object.assign(user, attrs);
     return this.userRepository.save(user);
   }
@@ -69,5 +65,16 @@ export class UsersService {
   async create(userData: any): Promise<User> {
     const newUser = this.userRepository.create(userData as User);
     return this.userRepository.save(newUser);
+  }
+
+  async findOne(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['shipperProfile'] 
+    });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
   }
 }

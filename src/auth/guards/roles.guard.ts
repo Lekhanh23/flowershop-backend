@@ -13,10 +13,9 @@ export class RolesGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
     if (!requiredRoles) {
-      return true; // Không yêu cầu role, cho qua
+      return true; 
     }
     const { user } = context.switchToHttp().getRequest();
-    // user được trả về từ JwtStrategy.validate()
     return requiredRoles.some((role) => user.role === role);
   }
 }
